@@ -1,0 +1,20 @@
+https://youtu.be/cNb6WYNvxok
+/newbot
+variant_pizza_store # назва бота
+pizza_store_bot # назва користувача
+
+token : 6553434155:AAGCj6wQWWmL351jDkycq6YvAxjcPp04znQ
+
+----------------------------------------------
+Налаштування telegram bots
+Меню - /mybots - Bot Settings  : edit Bot -
+
+-------------------------------------------------
+pip install aiogram ?? (3.3.0)
+pip install python-dotenv
+
+
+
+
+12 : 03
+
