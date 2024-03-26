@@ -17,12 +17,7 @@ async def start_cmd(message: types.Message):
 
 @dp.message()# обробник подій без фільтрів розміщуємо після всіх інших обробників подій
 async def echo(message: types.Message):
-    text = message.text
-    if text in GRETING_PHRASES:
-        await message.answer(f'Доброго дня {current_name}')
-    elif text in FAREWELL_PHRASES:
-        await message.answer(f'До зустрічі {current_name}')
-    else:
+
         await message.answer(f"{current_name},\n ваша фраза : '{message.text}' нам не зрозуміла. \n  Спробуйте короткі фрази на зразок: {GRETING_PHRASES} чи {FAREWELL_PHRASES}")
 #--------------------------------------------------------------------
 async def main():
