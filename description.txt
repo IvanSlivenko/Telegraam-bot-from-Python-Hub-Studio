@@ -3,7 +3,7 @@ https://youtu.be/MvTLLCOMyEQ # ------- Part 2
 https://youtu.be/IFCe_6trrMI # ------- Part 3
 https://youtu.be/gV7T5ofQzAU # ------- Part 4
 
-07 : 01
+31 : 18
 
 https://core.telegram.org
 
@@ -19,7 +19,7 @@ token : 6553434155:AAGCj6wQWWmL351jDkycq6YvAxjcPp04znQ
 Меню - /mybots - Bot Settings  : edit Bot -
 
 -------------------------------------------------
-pip install aiogram ?? (3.3.0)
+pip install aiogram
 pip install python-dotenv
 
 
