@@ -9,10 +9,20 @@ user_private_router = Router()
 user_private_router.message.filter(ChatTypefilter(['private']))
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message):
-    await message.answer(f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ", reply_markup=reply.srart_kb)
+    await message.answer(f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ",
+                         reply_markup=reply.start_kb3.as_markup
+                                 (
+                                 resize_keyboards = True,
+                                 input_field_placeholder = 'Що вас цікавить ?'
+
+                                )
+                         )
+
+
+
 @user_private_router.message(or_f(Command('menu'), (F.text.lower().contains('меню'))))
 async def menu_comands(message: types.Message):
-        await message.answer('Тут буде меню',reply_markup=reply.del_kbd)
+        await message.answer('Тут буде меню', reply_markup=reply.del_kbd)
 
 @user_private_router.message(Command('cl'))
 async def commands_list(message: types.Message):
@@ -52,5 +62,15 @@ async def magic_filter_text(message: types.Message):
 @user_private_router.message(F.photo)
 async def magic_filter_photo(message: types.Message):
         await message.answer('Це магічний фільтр зображень')
+
+@user_private_router.message(F.contact)
+async def get_contact(message: types.Message):
+        await message.answer(f'Контакт отримано')
+        await message.answer(str(message.contact))
+
+@user_private_router.message(F.location)
+async def get_location(message: types.Message):
+        await message.answer(f'Локацію отримано')
+        await message.answer(str(message.location))
 
 
