@@ -3,14 +3,16 @@ from aiogram.filters import CommandStart, Command, or_f
 from const import COMMANDS_LIST
 from filters.chat_types import ChatTypefilter
 
+from kbds import reply
+
 user_private_router = Router()
 user_private_router.message.filter(ChatTypefilter(['private']))
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message):
-    await message.answer(f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ")
+    await message.answer(f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ", reply_markup=reply.srart_kb)
 @user_private_router.message(or_f(Command('menu'), (F.text.lower().contains('меню'))))
 async def menu_comands(message: types.Message):
-        await message.answer('Тут буде меню')
+        await message.answer('Тут буде меню',reply_markup=reply.del_kbd)
 
 @user_private_router.message(Command('cl'))
 async def commands_list(message: types.Message):
@@ -38,10 +40,14 @@ async def magic_filter_text_contains(message: types.Message):
 async def magic_filter_text_greeting(message: types.Message):
         await message.answer(f'Вітаємо Вас \n{message.from_user.first_name}')
 
+@user_private_router.message( (F.text.lower().contains('замовити')) | (F.text.lower().contains('замовлення')) )
+async def magic_filter_text_order(message: types.Message):
+        await message.answer('З приводу замовлень уточніть у менеджера по замовленням 067 470 87 21')
 
-# @user_private_router.message(F.text)
-# async def magic_filter_text(message: types.Message):
-#         await message.answer('Ваш текст поки-що не ідентифіковано')
+
+@user_private_router.message(F.text)
+async def magic_filter_text(message: types.Message):
+        await message.answer('Ваш текст поки-що не ідентифіковано')
 
 @user_private_router.message(F.photo)
 async def magic_filter_photo(message: types.Message):
