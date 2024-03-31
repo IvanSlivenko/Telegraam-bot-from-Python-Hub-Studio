@@ -1,8 +1,10 @@
 from aiogram import types, Router, F
 from aiogram.filters import CommandStart, Command, or_f
+from aiogram.enums import ParseMode
+from aiogram.utils.formatting import as_list, as_marked_section, Bold
+
 from const import COMMANDS_LIST
 from filters.chat_types import ChatTypefilter
-
 from kbds import reply
 
 user_private_router = Router()
@@ -37,12 +39,39 @@ async def about_cmd(message: types.Message):
 @user_private_router.message((F.text.lower().contains('оплат')) | (F.text.lower() == 'варіанти оплати') | (F.text.lower().contains('заплат')))
 @user_private_router.message(Command('payment'))
 async def payment_cmd(message: types.Message):
-        await message.answer('З приводу оплати вам розповість менеджер з продажу 067 470 87 21')
+    text = as_marked_section(
+        Bold("Варіанти оплати:"),
+        'Карткою в боті',
+        'При отриманні',
+        'В закладі',
+        marker='✔ '
+
+    )
+    # await message.answer('З приводу оплати вам розповість менеджер з продажу 067 470 87 21')
+    await message.answer(text.as_html())
 
 
 @user_private_router.message((F.text.lower().contains('доставк')) | (F.text.lower() == 'варіанти доставки'))
+@user_private_router.message(Command('shipping'))
 async def magic_filter_text_contains(message: types.Message):
-        await message.answer('З питань доставки уточніть у логіста 067 470 87 21')
+    text = as_list(as_marked_section(
+            Bold("Варіанти доставки:"),
+            "Кур'єр (доставка)",
+            'Самовиніс (з собою )',
+            'В закладі (тут )',
+            marker='✔ '
+            ),
+            as_marked_section(
+                Bold("Не можна:"),
+                "Пошта",
+                'Голуби',
+
+                marker='❌ '
+            ),
+            sep='\n-----------------------------------\n'
+    )
+    # await message.answer('<b>З питань доставки уточніть у логіста 067 470 87 21</b>', parse_mode=ParseMode.HTML)
+    await message.answer(text.as_html())
 
 @user_private_router.message((F.text.lower() == 'привіт') |
                              (F.text.lower() == 'доброго дня') |

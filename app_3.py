@@ -3,6 +3,7 @@ import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import BotCommandScopeAllPrivateChats
+from aiogram.enums import ParseMode
 
 from dotenv import find_dotenv, load_dotenv
 
@@ -21,7 +22,7 @@ from common.bot_commands_list import private
 
 #===========================================
 # bot = Bot(token = TOKEN)
-bot = Bot(token=os.getenv('TOKEN'))
+bot = Bot(token=os.getenv('TOKEN'), parse_mode=ParseMode.HTML)
 dp = Dispatcher()
 
 dp.include_router(user_private_router)
