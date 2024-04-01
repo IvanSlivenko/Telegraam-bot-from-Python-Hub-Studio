@@ -4,12 +4,12 @@ from aiogram.enums import ParseMode
 from aiogram.utils.formatting import as_list, as_marked_section, Bold
 
 from const import COMMANDS_LIST
-from filters.chat_types import ChatTypefilter
+from filters.chat_types import ChatTypeFilter
 from kbds import reply
 
 
 user_private_router = Router()
-user_private_router.message.filter(ChatTypefilter(['private']))
+user_private_router.message.filter(ChatTypeFilter(['private']))
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message):
     await message.answer(f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ",

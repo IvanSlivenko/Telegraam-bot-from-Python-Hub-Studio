@@ -4,13 +4,13 @@ from aiogram.enums import ParseMode
 from aiogram.utils.formatting import as_list, as_marked_section, Bold
 
 from const import COMMANDS_LIST
-from filters.chat_types import ChatTypefilter
+from filters.chat_types import ChatTypeFilter
 from kbds import reply, reply_2
 from kbds.reply_2 import get_keyboard
 
 
 user_private_router = Router()
-user_private_router.message.filter(ChatTypefilter(['private']))
+user_private_router.message.filter(ChatTypeFilter(['private']))
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message):
     await message.answer(
@@ -21,7 +21,7 @@ async def start_cmd(message: types.Message):
                 'Варіанти оплати',
                 'Варіанти доставки',
                 'Відгуки',
-                placeholder='',
+                placeholder='Що вас цікавить ?',
                 sizes=(2, 2)
              ),
             )
@@ -30,7 +30,8 @@ async def start_cmd(message: types.Message):
 
 @user_private_router.message(or_f(Command('menu'), (F.text.lower().contains('меню'))))
 async def menu_comands(message: types.Message):
-        await message.answer('Тут буде меню',reply_markup=reply.del_kbd)
+        await message.answer('Тут буде меню',reply_markup=reply_2.del_kbd)
+        # await message.answer('Тут буде меню')
 
 @user_private_router.message(Command('cl'))
 async def commands_list(message: types.Message):

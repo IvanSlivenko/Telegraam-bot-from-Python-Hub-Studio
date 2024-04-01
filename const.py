@@ -4,9 +4,7 @@ URL_TELEGRAM = 'https://api.telegram.org/bot'
 #------------------------------------------------------------
 ALOOWED_UPDATES = [
                     'message',
-                    'editet_message'
-
-
+                    'edited_message'
                    ]
 #-----------------------------------------------------------
 
@@ -20,7 +18,8 @@ COMMANDS_LIST = (" СПИСОК КОМАНД :\n"
 RESTRICTED_WORDS = {
                     'кабан',
                     'хомяк',
-                    'вихухоль'
+                    'вихухоль',
+                    'хрін'
                     }
 
 
