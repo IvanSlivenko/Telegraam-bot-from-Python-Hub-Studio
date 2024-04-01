@@ -13,6 +13,7 @@ from const import ALOOWED_UPDATES
 from phrases import GRETING_PHRASES, FAREWELL_PHRASES
 
 from handlers.user_private import user_private_router
+from handlers.user_private_2 import user_private_router
 from handlers.user_group import user_group_router
 
 
@@ -22,7 +23,8 @@ from common.bot_commands_list import private
 
 #===========================================
 # bot = Bot(token = TOKEN)
-bot = Bot(token=os.getenv('TOKEN'), parse_mode=ParseMode.HTML)
+# bot = Bot(token=os.getenv('TOKEN'), parse_mode=ParseMode.HTML)
+bot = Bot(token=os.getenv('TOKEN'))
 dp = Dispatcher()
 
 dp.include_router(user_private_router)

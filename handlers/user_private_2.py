@@ -5,27 +5,32 @@ from aiogram.utils.formatting import as_list, as_marked_section, Bold
 
 from const import COMMANDS_LIST
 from filters.chat_types import ChatTypefilter
-from kbds import reply
+from kbds import reply, reply_2
+from kbds.reply_2 import get_keyboard
 
 
 user_private_router = Router()
 user_private_router.message.filter(ChatTypefilter(['private']))
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message):
-    await message.answer(f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ",
-                         reply_markup=reply.start_kb3.as_markup
-                                 (
-                                 resize_keyboards = True,
-                                 input_field_placeholder = 'Що вас цікавить ?'
-
-                                )
-                         )
+    await message.answer(
+        f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ",
+             reply_markup=get_keyboard(
+                'Меню',
+                'Про нас',
+                'Варіанти оплати',
+                'Варіанти доставки',
+                'Відгуки',
+                placeholder='',
+                sizes=(2, 2)
+             ),
+            )
 
 
 
 @user_private_router.message(or_f(Command('menu'), (F.text.lower().contains('меню'))))
 async def menu_comands(message: types.Message):
-        await message.answer('Тут буде меню', reply_markup=reply.del_kbd)
+        await message.answer('Тут буде меню',reply_markup=reply.del_kbd)
 
 @user_private_router.message(Command('cl'))
 async def commands_list(message: types.Message):
