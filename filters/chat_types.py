@@ -1,6 +1,6 @@
 from aiogram.filters import Filter
 from aiogram import Bot, types
-from app_3 import my_admins_list
+
 
 
 class ChatTypeFilter(Filter):

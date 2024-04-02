@@ -91,9 +91,9 @@ async def magic_filter_text_order(message: types.Message):
         await message.answer('З приводу замовлень уточніть у менеджера по замовленням 067 470 87 21')
 
 
-@user_private_router.message(F.text)
-async def magic_filter_text(message: types.Message):
-        await message.answer('Ваш текст поки-що не ідентифіковано')
+# @user_private_router.message(F.text)
+# async def magic_filter_text(message: types.Message):
+#         await message.answer('Ваш текст поки-що не ідентифіковано')
 
 @user_private_router.message(F.photo)
 async def magic_filter_photo(message: types.Message):
