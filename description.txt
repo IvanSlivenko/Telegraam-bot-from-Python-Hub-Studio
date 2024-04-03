@@ -4,8 +4,10 @@ https://youtu.be/IFCe_6trrMI # ------- Part 3
 https://youtu.be/gV7T5ofQzAU # ------- Part 4
 https://youtu.be/b_m4Bk1sLwA?list=PLNi5HdK6QEmWLtb8gh8pwcFUJCAabqZh_# -----  Part 5
 https://youtu.be/55w2QpPGC-E?list=PLNi5HdK6QEmWLtb8gh8pwcFUJCAabqZh_# ------ Part 6
+https://youtu.be/osg6WUc1EN4?list=PLNi5HdK6QEmWLtb8gh8pwcFUJCAabqZh_#------ Part 7
 
-36 : 29
+
+27 : 01
 
 https://core.telegram.org
 
@@ -23,6 +25,9 @@ token : 6553434155:AAGCj6wQWWmL351jDkycq6YvAxjcPp04znQ
 -------------------------------------------------
 pip install aiogram
 pip install python-dotenv
+pip install sqlalchemy
+pip install aiosqlite
+pip install asyncpg
 
 
 

@@ -6,6 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from kbds.reply_2 import get_keyboard
 
+
 admin_router = Router()
 admin_router.message.filter(ChatTypeFilter(["private"]), IsAdmin())
 
@@ -92,17 +93,32 @@ async def add_name(message: types.Message, state: FSMContext):
     await message.answer("Вкажіть опис товару")
     await state.set_state(AddProduct.description)
 
+@admin_router.message(AddProduct.name)
+async def add_name_Error(message: types.Message, state: FSMContext):
+    await message.answer("Ви вказали не допустимі данні, вкажіть назву товару у строковому форматі")
+
+
 @admin_router.message(AddProduct.description, F.text)
 async def add_description(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
     await message.answer("Вкажіть ціну товару")
     await state.set_state(AddProduct.price)
 
+@admin_router.message(AddProduct.description)
+async def add_description_Error(message: types.Message, state: FSMContext):
+    await message.answer("Ви вказали не допустимі данні, вкажіть опис товару у строковому форматі")
+
+
 @admin_router.message(AddProduct.price, F.text)
 async def add_price(message: types.Message, state: FSMContext):
     await state.update_data(price=message.text)
     await message.answer("Додайте картинку товару")
     await state.set_state(AddProduct.image)
+
+@admin_router.message(AddProduct.price)
+async def add_price_Error(message: types.Message, state: FSMContext):
+    await message.answer("Ви вказали не допустимі данні, вкажіть ціну товару у числовому форматі")
+
 
 @admin_router.message(AddProduct.image, F.photo)
 async def add_image(message: types.Message, state: FSMContext):
@@ -111,4 +127,8 @@ async def add_image(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await message.answer(str(data))
     await state.clear()
+
+@admin_router.message(AddProduct.image)
+async def add_price_Error(message: types.Message, state: FSMContext):
+    await message.answer("Додайте зображення товару")
 

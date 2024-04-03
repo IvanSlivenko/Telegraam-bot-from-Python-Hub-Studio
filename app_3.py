@@ -5,11 +5,10 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
 from aiogram.fsm.strategy import FSMStrategy
 from dotenv import find_dotenv, load_dotenv
+from middlewares.db import CounterMiddleware
+
 
 from const import ALLOWED_UPDATES
-
-# from aiogram.filters import CommandStart
-# from aiogram.types import BotCommandScopeAllPrivateChats
 
 
 
@@ -35,6 +34,9 @@ bot.my_admins_list = []
 
 # dp = Dispatcher(fsm_strategy=FSMStrategy.USER_IN_CHAT)
 dp = Dispatcher()
+
+
+
 
 
 dp.include_router(user_private_router)
