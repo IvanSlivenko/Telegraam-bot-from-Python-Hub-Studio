@@ -95,9 +95,9 @@ async def magic_filter_text_order(message: types.Message):
 # async def magic_filter_text(message: types.Message):
 #         await message.answer('Ваш текст поки-що не ідентифіковано')
 
-@user_private_router.message(F.photo)
-async def magic_filter_photo(message: types.Message):
-        await message.answer('Це магічний фільтр зображень')
+# @user_private_router.message(F.photo)
+# async def magic_filter_photo(message: types.Message):
+#         await message.answer('Це магічний фільтр зображень')
 
 @user_private_router.message(F.contact)
 async def get_contact(message: types.Message):
