@@ -44,6 +44,13 @@ class AddProduct(StatesGroup):
     description = State()
     price = State()
     image = State()
+    texts = {
+        'AddProduct:name': 'Вкажіть назву заново',
+        'AddProduct:description': 'Вкажіть опис заново',
+        'AddProduct:price': 'Вкажіть ціну заново',
+        'AddProduct:image': 'Цей крос останній...'
+
+    }
 
 @admin_router.message(StateFilter(None),F.text.lower() == "додати товар")
 async def add_product(message: types.Message, state: FSMContext):
@@ -55,11 +62,28 @@ async def add_product(message: types.Message, state: FSMContext):
 @admin_router.message(StateFilter('*'), Command("відміна"))
 @admin_router.message(StateFilter('*'), F.text.casefold() == "відміна")
 async def cancel_handler(message: types.Message, state: FSMContext) -> None:
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+    await state.clear()
     await message.answer("Дії відмінені", reply_markup=ADMIN_KB)
 
-@admin_router.message(Command("назад"))
-@admin_router.message(F.text.casefold() == "назад")
+@admin_router.message(StateFilter('*'), Command("назад"))
+@admin_router.message(StateFilter('*'), F.text.casefold() == "назад")
 async def cancel_handler(message: types.Message, state: FSMContext) -> None:
+    current_state = await state.get_state()
+    if current_state == AddProduct.name:
+        await message.answer("Попередього кроку немає, або вкажіть назву товара, або напишіть 'відміна'")
+        return
+
+    previous = None
+    for step in AddProduct.__all_states__:
+        if step.state == current_state:
+            await state.set_state(previous)
+            await message.answer(f"Ок, ви повернулись до попереднього кроку \n {AddProduct.texts[previous.state]}")
+            return
+        previous = step
+
     await message.answer(f"ок, ви повернулись до попереднього кроку")
 
 @admin_router.message(AddProduct.name, F.text)
