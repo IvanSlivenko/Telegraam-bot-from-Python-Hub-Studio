@@ -1,6 +1,9 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message, TelegramObject
 from typing import Any, Awaitable, Callable, Dict
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
+
 
 
 # class CounterMiddleware(BaseMiddleware):
@@ -16,3 +19,19 @@ from typing import Any, Awaitable, Callable, Dict
 #         self.counter += 1
 #         data['counter'] = self.counter
 #         return await handler(event, data)
+
+class DataBaseSession(BaseMiddleware):
+    def __init__(self, session_pool: async_sessionmaker):
+        self.sessio_poll = session_pool
+
+    async def __call__(
+            self,
+            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+            event: TelegramObject,
+            data: Dict[str, Any],
+
+
+            ) -> Any:
+        async with self.sessio_poll() as session:
+            data['session'] = session
+            return await handler(event, data)
