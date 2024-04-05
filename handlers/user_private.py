@@ -2,10 +2,14 @@ from aiogram import types, Router, F
 from aiogram.filters import CommandStart, Command, or_f
 from aiogram.enums import ParseMode
 from aiogram.utils.formatting import as_list, as_marked_section, Bold
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from const import COMMANDS_LIST
 from filters.chat_types import ChatTypeFilter
-from kbds import reply
+from kbds import reply_2
+from database.orm_query import orm_product, orm_get_products
+
+from kbds.reply_2 import get_keyboard
 
 
 user_private_router = Router()
@@ -13,19 +17,23 @@ user_private_router.message.filter(ChatTypeFilter(['private']))
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message):
     await message.answer(f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ",
-                         reply_markup=reply.start_kb3.as_markup
+                         reply_markup=reply_2.start_kb3.as_markup
                                  (
-                                 resize_keyboards = True,
-                                 input_field_placeholder = 'Що вас цікавить ?'
+                                 resize_keyboards=True,
+                                 input_field_placeholder='Що вас цікавить ?'
 
                                 )
                          )
 
-
-
-@user_private_router.message(or_f(Command('menu'), (F.text.lower().contains('меню'))))
-async def menu_comands(message: types.Message):
-        await message.answer('Тут буде меню', reply_markup=reply.del_kbd)
+@user_private_router.message(or_f(Command("menu"), (F.text.lower() == "меню")))
+async def menu_comands(message: types.Message, session: AsyncSession):
+    for product in await orm_get_products(session):
+        await message.answer_photo(
+            product.image,
+            caption=f"<strong>{product.name}\
+                    </strong>\n {product.description}\n Вартість : {round(product.price, 2)}",
+        )
+    await message.answer('Ось меню')
 
 @user_private_router.message(Command('cl'))
 async def commands_list(message: types.Message):
@@ -85,9 +93,9 @@ async def magic_filter_text_order(message: types.Message):
         await message.answer('З приводу замовлень уточніть у менеджера по замовленням 067 470 87 21')
 
 
-@user_private_router.message(F.text)
-async def magic_filter_text(message: types.Message):
-        await message.answer('Ваш текст поки-що не ідентифіковано')
+# @user_private_router.message(F.text)
+# async def magic_filter_text(message: types.Message):
+#         await message.answer('Ваш текст поки-що не ідентифіковано')
 
 @user_private_router.message(F.photo)
 async def magic_filter_photo(message: types.Message):

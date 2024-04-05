@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from kbds.reply_2 import get_keyboard
+from kbds.inline import get_inlineMix_btns, get_callback_btns, get_url_btns
 from database.orm_query import orm_product, orm_get_products
+
 
 
 
@@ -25,16 +27,19 @@ ADMIN_KB = get_keyboard(
 async def add_product(message: types.Message):
     await message.answer("Маєте бажання щось зробити", reply_markup=ADMIN_KB)
 
-@admin_router.message(F.text.lower() == 'Ассортимент')
+@admin_router.message(F.text == 'Ассортимент')
 async def starring_at_product(message: types.Message, session: AsyncSession):
     for product in await orm_get_products(session):
         await message.answer_photo(
-         product.image,
-            caption=f"<strong>{product.name}\n </strong>\n"
-                    f"{product.description}\n"
-                    f"Вартість : {round(product.price), 2}",
+            product.image,
+            caption=f"<strong>{product.name}\
+                    </strong>\n {product.description}\n Вартість : {round(product.price, 2)}",
+            reply_markup=get_callback_btns(btns={
+                'Видалити': f'delete_{product.id}',
+                'Змінити': f'change_{product.id}'
+            })
         )
-    await message.answer('ОК , ось список товарів')
+    await message.answer('ОК, ось список товарів')
 
 # @admin_router.message(F.text.lower() == 'змінити товар')
 # async def change_product(message: types.Message):

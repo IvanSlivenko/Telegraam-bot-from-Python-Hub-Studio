@@ -2,11 +2,13 @@ from aiogram import types, Router, F
 from aiogram.filters import CommandStart, Command, or_f
 from aiogram.enums import ParseMode
 from aiogram.utils.formatting import as_list, as_marked_section, Bold
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from const import COMMANDS_LIST
 from filters.chat_types import ChatTypeFilter
 from kbds import reply, reply_2
 from kbds.reply_2 import get_keyboard
+from database.orm_query import orm_product, orm_get_products
 
 
 user_private_router = Router()
@@ -28,11 +30,15 @@ async def start_cmd(message: types.Message):
 
 
 
-@user_private_router.message(or_f(Command('menu'), (F.text.lower().contains('меню'))))
-async def menu_comands(message: types.Message):
-        await message.answer('Тут буде меню',reply_markup=reply_2.del_kbd)
-        # await message.answer('Тут буде меню')
-
+@user_private_router.message(or_f(Command("menu"), (F.text.lower() == "меню")))
+async def menu_comands(message: types.Message, session: AsyncSession):
+    for product in await orm_get_products(session):
+        await message.answer_photo(
+            product.image,
+            caption=f"<strong>{product.name}\
+                    </strong>\n {product.description}\n Вартість : {round(product.price, 2)}",
+        )
+    await message.answer('Ось меню')
 @user_private_router.message(Command('cl'))
 async def commands_list(message: types.Message):
         await message.answer(COMMANDS_LIST)

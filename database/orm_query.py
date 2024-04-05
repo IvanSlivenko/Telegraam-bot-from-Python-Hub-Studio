@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
-from database.models import Produkt
+from database.models import Product
 async def orm_product(session: AsyncSession, data: dict):
-    оbj = Produkt(
+    оbj = Product(
         name=data["name"],
         description=data["description"],
         price=float(data["price"]),
@@ -12,17 +12,17 @@ async def orm_product(session: AsyncSession, data: dict):
     await session.commit()
 
 async def orm_get_products(session: AsyncSession):
-    query = select(Produkt)
+    query = select(Product)
     result = await session.execute(query)
-    return result.scalar().all()
+    return result.scalars().all()
 
 async def orm_get_product(session: AsyncSession, product_id: int):
-    query = select(Produkt).where(Produkt.id == product_id)
+    query = select(Product).where(Product.id == product_id)
     result = await session.execute(query)
-    return result.scalar()
+    return result.scalars()
 
 async def orm_update_product(session: AsyncSession, product_id: int, data):
-    query = update(Produkt).where(Produkt.id == product_id).values(
+    query = update(Product).where(Product.id == product_id).values(
         name=data["name"],
         description=data["description"],
         price=float(data["price"]),
@@ -32,6 +32,6 @@ async def orm_update_product(session: AsyncSession, product_id: int, data):
 
 
 async def orm_delete_product(session: AsyncSession, product_id: int):
-    query = delete(Produkt).where(Produkt.id == product_id)
+    query = delete(Product).where(Product.id == product_id)
     await session.execute(query)
     await session.commit()

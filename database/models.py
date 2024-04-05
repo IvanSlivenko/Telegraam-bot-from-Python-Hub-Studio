@@ -6,7 +6,7 @@ class Base(DeclarativeBase):
     created: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
     updated: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
-class Produkt(Base):
+class Product(Base):
     __tablename__ = 'product'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
