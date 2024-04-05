@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from kbds.reply_2 import get_keyboard
-from database.models import Produkt
+from database.orm_query import orm_product, orm_get_products
+
 
 
 admin_router = Router()
@@ -15,31 +16,34 @@ admin_router.message.filter(ChatTypeFilter(["private"]), IsAdmin())
 
 ADMIN_KB = get_keyboard(
         "Додати товар",
-        "Змінити товар",
-        "Видалити товар",
-        "Я так, просто подивитись",
+        "Ассортимент",
         placeholder="Оберіть дію",
-        sizes=(2, 1, 1),
+        sizes=(2,),
     )
 
 @admin_router.message(Command("admin"))
 async def add_product(message: types.Message):
     await message.answer("Маєте бажання щось зробити", reply_markup=ADMIN_KB)
 
-@admin_router.message(F.text.lower() == 'я так просто подивитись')
-async def starring_at_product(message: types.Message):
+@admin_router.message(F.text.lower() == 'Ассортимент')
+async def starring_at_product(message: types.Message, session: AsyncSession):
+    for product in await orm_get_products(session):
+        await message.answer_photo(
+         product.image,
+            caption=f"<strong>{product.name}\n </strong>\n"
+                    f"{product.description}\n"
+                    f"Вартість : {round(product.price), 2}",
+        )
     await message.answer('ОК , ось список товарів')
 
-
-
-@admin_router.message(F.text.lower() == 'змінити товар')
-async def change_product(message: types.Message):
-    await message.answer('ОК , ось список товарів')
-
-
-@admin_router.message(F.text.lower() == "видалити товар")
-async def delete_product(message: types.Message):
-    await message.answer("Виберіть товар(и) для видалення")
+# @admin_router.message(F.text.lower() == 'змінити товар')
+# async def change_product(message: types.Message):
+#     await message.answer('ОК , ось список товарів')
+#
+#
+# @admin_router.message(F.text.lower() == "видалити товар")
+# async def delete_product(message: types.Message):
+#     await message.answer("Виберіть товар(и) для видалення")
 
 # Код для машин стану (FSM) ////////////////////////////////////////////////////
 
@@ -127,17 +131,17 @@ async def add_price_Error(message: types.Message, state: FSMContext):
 async def add_image(message: types.Message, state: FSMContext, session: AsyncSession):
 
     await state.update_data(image=message.photo[-1].file_id)
-    await message.answer("Товар додано", reply_markup=ADMIN_KB)
     data = await state.get_data()
-    session.add(Produkt(
-        name=data["name"],
-        description=data["description"],
-        price=float(data["price"]),
-        image=data["image"],
-    ))
-    await session.commit()
+    try:
+        await orm_product(session, data)
+        await message.answer("Товар додано", reply_markup=ADMIN_KB)
+        await state.clear()
+    except Exception as e:
+        await message.answer(
+        f"Помилка: \n{str(e)}\n Зверніться до розробника", reply_markup=ADMIN_KB)
+        await state.clear()
 
-    await state.clear()
+
 
 @admin_router.message(AddProduct.image)
 async def add_price_Error(message: types.Message, state: FSMContext):
