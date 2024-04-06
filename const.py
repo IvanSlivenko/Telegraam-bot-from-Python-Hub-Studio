@@ -2,7 +2,7 @@ TOKEN = '6553434155:AAGCj6wQWWmL351jDkycq6YvAxjcPp04znQ'
 URL_TELEGRAM = 'https://api.telegram.org/bot'
 
 #------------------------------------------------------------
-ALLOWED_UPDATES = ['message, edited_message']
+ALLOWED_UPDATES = ['message, edited_message', 'callback_query']
 #-----------------------------------------------------------
 
 COMMANDS_LIST = (" СПИСОК КОМАНД :\n"

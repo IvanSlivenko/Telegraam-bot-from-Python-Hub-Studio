@@ -68,7 +68,8 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     # await bot.delete_my_commands(scope=BotCommandScopeAllPrivateChats()) # Видалення команд з меню
     await bot.set_my_commands(commands=private, scope=types.BotCommandScopeAllPrivateChats())
-    await dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
+    # await dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 asyncio.run(main())
 #--------------------------------------------------------------------

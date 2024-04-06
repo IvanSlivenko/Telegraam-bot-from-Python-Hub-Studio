@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from kbds.reply_2 import get_keyboard
 from kbds.inline import get_inlineMix_btns, get_callback_btns, get_url_btns
-from database.orm_query import orm_product, orm_get_products
+from database.orm_query import orm_product, orm_get_products, orm_delete_product
 
 
 
@@ -41,6 +41,17 @@ async def starring_at_product(message: types.Message, session: AsyncSession):
         )
     await message.answer('ОК, ось список товарів')
 
+
+@admin_router.callback_query(F.data.startswith('delete_'))
+async def delete_product(callback: types.callback_query, session: AsyncSession):
+
+    product_id = callback.data.split("_")[-1]
+    await orm_delete_product(session, int(product_id))
+
+    await callback.answer("Товар видалено", show_alert=True)
+    await callback.message.answer("Товар видалено !")
+
+
 # @admin_router.message(F.text.lower() == 'змінити товар')
 # async def change_product(message: types.Message):
 #     await message.answer('ОК , ось список товарів')
@@ -50,13 +61,15 @@ async def starring_at_product(message: types.Message, session: AsyncSession):
 # async def delete_product(message: types.Message):
 #     await message.answer("Виберіть товар(и) для видалення")
 
-# Код для машин стану (FSM) ////////////////////////////////////////////////////
 
+
+# Код для машин стану (FSM) ////////////////////////////////////////////////////
 class AddProduct(StatesGroup):
     name = State()
     description = State()
     price = State()
     image = State()
+
     texts = {
         'AddProduct:name': 'Вкажіть назву заново',
         'AddProduct:description': 'Вкажіть опис заново',
