@@ -1,5 +1,5 @@
 from aiogram import F, Router, types
-from aiogram.filters import Command, StateFilter
+from aiogram.filters import Command, StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from kbds.reply_2 import get_keyboard
 from kbds.inline import get_inlineMix_btns, get_callback_btns, get_url_btns
-from database.orm_query import orm_product, orm_get_products, orm_delete_product
+from database.orm_query import orm_product, orm_get_products, orm_get_product , orm_delete_product, orm_update_product
 
 
 
@@ -22,7 +22,21 @@ ADMIN_KB = get_keyboard(
         placeholder="Оберіть дію",
         sizes=(2,),
     )
+class AddProduct(StatesGroup):
+    name = State()
+    description = State()
+    price = State()
+    image = State()
 
+    product_for_change = None
+
+    texts = {
+        'AddProduct:name': 'Вкажіть назву заново',
+        'AddProduct:description': 'Вкажіть опис заново',
+        'AddProduct:price': 'Вкажіть ціну заново',
+        'AddProduct:image': 'Цей крос останній...'
+
+    }
 @admin_router.message(Command("admin"))
 async def add_product(message: types.Message):
     await message.answer("Маєте бажання щось зробити", reply_markup=ADMIN_KB)
@@ -41,10 +55,9 @@ async def starring_at_product(message: types.Message, session: AsyncSession):
         )
     await message.answer('ОК, ось список товарів')
 
-
+# ----- Видаляємо товар
 @admin_router.callback_query(F.data.startswith('delete_'))
-async def delete_product(callback: types.callback_query, session: AsyncSession):
-
+async def delete_product_callback(callback: types.CallbackQuery, session: AsyncSession):
     product_id = callback.data.split("_")[-1]
     await orm_delete_product(session, int(product_id))
 
@@ -52,31 +65,22 @@ async def delete_product(callback: types.callback_query, session: AsyncSession):
     await callback.message.answer("Товар видалено !")
 
 
-# @admin_router.message(F.text.lower() == 'змінити товар')
-# async def change_product(message: types.Message):
-#     await message.answer('ОК , ось список товарів')
-#
-#
-# @admin_router.message(F.text.lower() == "видалити товар")
-# async def delete_product(message: types.Message):
-#     await message.answer("Виберіть товар(и) для видалення")
+# ------- Змінюємо товар
+@admin_router.callback_query(StateFilter(None), F.data.startwith("change_"))
+async def change_product_callback(callback: types.CallbackQuery, state: FSMContext, session: AsyncSession):
+    product_id = callback.data.split("_")[-1]
+    product_for_change = await orm_get_product(session, int(product_id))
 
+    AddProduct.product_for_change = product_for_change
+    await callback.answer("Товар буде змінено", show_alert=True)
+    await callback.message.answer(
+        "Введіть назву товару", reply_markup=types.ReplyKeyboardRemove()
+    )
+    await state.set_state(AddProduct.name)
 
 
 # Код для машин стану (FSM) ////////////////////////////////////////////////////
-class AddProduct(StatesGroup):
-    name = State()
-    description = State()
-    price = State()
-    image = State()
 
-    texts = {
-        'AddProduct:name': 'Вкажіть назву заново',
-        'AddProduct:description': 'Вкажіть опис заново',
-        'AddProduct:price': 'Вкажіть ціну заново',
-        'AddProduct:image': 'Цей крос останній...'
-
-    }
 
 @admin_router.message(StateFilter(None),F.text.lower() == "додати товар")
 async def add_product(message: types.Message, state: FSMContext):
@@ -112,9 +116,16 @@ async def cancel_handler(message: types.Message, state: FSMContext) -> None:
 
     await message.answer(f"ок, ви повернулись до попереднього кроку")
 
-@admin_router.message(AddProduct.name, F.text)
+@admin_router.message(AddProduct.name, or_f(F.text, F.text == '.') )
 async def add_name(message: types.Message, state: FSMContext):
-    await state.update_data(name=message.text)
+    if message.text == '.':
+        await state.update_data(name=AddProduct.product_for_change)
+    else:
+        if len(message.text) >= 100:
+            await message.answer('Назва товру не повина перевищувати 100 символів.\n Спробуйте знову')
+            return
+
+        await state.update_data(name=message.text)
     await message.answer("Вкажіть опис товару")
     await state.set_state(AddProduct.description)
 
@@ -123,9 +134,12 @@ async def add_name_Error(message: types.Message, state: FSMContext):
     await message.answer("Ви вказали не допустимі данні, вкажіть назву товару у строковому форматі")
 
 
-@admin_router.message(AddProduct.description, F.text)
+@admin_router.message(AddProduct.description, or_f(F.text, F.text == '.'))
 async def add_description(message: types.Message, state: FSMContext):
-    await state.update_data(description=message.text)
+    if message.text == '.':
+        await state.update_data(description=AddProduct.product_for_change.description)
+    else:
+        await state.update_data(description=message.text)
     await message.answer("Вкажіть ціну товару")
     await state.set_state(AddProduct.price)
 
