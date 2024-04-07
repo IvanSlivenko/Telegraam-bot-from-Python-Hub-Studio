@@ -8,7 +8,7 @@ from const import COMMANDS_LIST
 from filters.chat_types import ChatTypeFilter
 from kbds import reply, reply_2
 from kbds.reply_2 import get_keyboard
-from database.orm_query import orm_product, orm_get_products
+from database.orm_query import orm_add_product, orm_get_products
 
 
 user_private_router = Router()
