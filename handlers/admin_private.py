@@ -110,7 +110,7 @@ async def cancel_handler(message: types.Message, state: FSMContext) -> None:
     if current_state is None:
         return
     if AddProduct.product_for_change:
-        AddProduct.product_for_change=None
+        AddProduct.product_for_change = None
     await state.clear()
     await message.answer("Дії відмінені", reply_markup=ADMIN_KB)
 

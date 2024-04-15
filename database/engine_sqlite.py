@@ -2,15 +2,8 @@ import os
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from database.models import Base
-from database.orm_query import orm_add_banner_description, orm_create_categories
 
-from common.texts_for_db import categories,description_for_info_pages
-
-# DB_LITE=sqlite+aiosqlite:///my_base.db
-# DB_URL=postgresql+asyncpg://login:password@localchost:5432/db_name
-
-# engine = create_async_engine(os.getenv('DB_LITE'), echo=True)
-engine = create_async_engine(os.getenv('DB_URL'), echo=True)
+engine = create_async_engine(os.getenv('DB_LITE'), echo=True)
 
 session_marker = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
