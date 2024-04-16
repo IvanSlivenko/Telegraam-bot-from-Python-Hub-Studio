@@ -5,17 +5,21 @@ from aiogram.fsm.state import State, StatesGroup
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from filters.chat_types import ChatTypeFilter, IsAdmin
-from kbds.reply_2 import get_keyboard
-from kbds.inline import get_callback_btns
-
 from database.orm_query import (
+    orm_change_banner_image,
+    orm_get_categories,
     orm_add_product,
     orm_delete_product,
+    orm_get_info_pages,
     orm_get_product,
     orm_get_products,
     orm_update_product,
 )
+
+from filters.chat_types import ChatTypeFilter, IsAdmin
+
+from kbds.inline import get_callback_btns
+from kbds.reply_2 import get_keyboard
 
 
 
@@ -48,10 +52,18 @@ class AddProduct(StatesGroup):
 async def add_product(message: types.Message):
     await message.answer("Маєте бажання щось зробити", reply_markup=ADMIN_KB)
 
-@admin_router.message(F.text == 'Ассортимент')
-async def starring_at_product(message: types.Message, session: AsyncSession):
-    for product in await orm_get_products(session):
-        await message.answer_photo(
+@admin_router.message(F.text == 'Асортимент')
+async def admin_features(message: types.Message, session: AsyncSession):
+    categories = await orm_get_categories(session)
+    btns = {category.name: f'category_{category.id}' for category in categories}
+    await message.answer("Оберіть категорію", reply_markup=get_callback_btns(btns=btns))
+
+
+@admin_router.callback_query(F.data.startswith('category_'))
+async def starring_at_product(callback: types.callback_query, session: AsyncSession):
+    category_id = callback.data.split('_')[-1]
+    for product in await orm_get_products(session, int(category_id)):
+        await callback.message.answer_photo(
             product.image,
             caption=f"<strong>{product.name}\
                     </strong>\n {product.description}\n Вартість : {round(product.price, 2)}",
@@ -60,7 +72,8 @@ async def starring_at_product(message: types.Message, session: AsyncSession):
                 'Змінити': f'change_{product.id}'
             })
         )
-    await message.answer('ОК, ось список товарів')
+    await callback.answer()
+    await callback.message.answer('ОК, ось список товарів')
 
 # ----- Видаляємо товар
 @admin_router.callback_query(F.data.startswith('delete_'))
@@ -72,6 +85,37 @@ async def delete_product_callback(
 
     await callback.answer("Товар видалено", show_alert=True)
     await callback.message.answer("Товар видалено !")
+
+############ Мікро FSM для  завантаження / зміни банерів#################
+class AddBanner(StatesGroup):
+    image = State()
+
+
+# Відправляємо перелік інформаційних сторінок бота і стаємо в стан відправки фото
+@admin_router.message(StateFilter(None), F.text == 'Додати/Змінити банер')
+async def add_image_2(message: types.message, state: FSMContext, session: AsyncSession):
+    pages_names = [page.name for page in await orm_get_info_pages(session)]
+    await message.answer(f"Відправте фото банера.\nВ описі вкажіть для якої сторінки:\
+                         \n{','.join(pages_names)}")
+    await state.set_state(AddBanner.image)
+
+#Додаємо / Змінюємо зображення в таблиці (там уже є записані сторінки по іменам:
+# main, catalog, cart(для пустої корзини),about, payment, shipping)
+
+@admin_router.message(AddBanner.image, F.photo)
+async def add_banner(message: types.Message, state: FSMContext, session: AsyncSession):
+    image_id = message.photo[-1].file_id
+    for_page = message.caption.strip()
+    pages_name = [page.name for page in await orm_get_info_pages(session)]
+    if for_page not in pages_name:
+        await message.answer(f"Введіть нормальну назву сторінки:\
+                            \n{','.join(pages_name)}")
+        return
+    await orm_change_banner_image(session, for_page, image_id)
+    await message.answer("Банер додано / змінено.")
+    await state.clear()
+
+#Ловимо не коректне введення
 
 # Код для машин стану (FSM) ////////////////////////////////////////////////////
 

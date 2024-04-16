@@ -69,7 +69,7 @@ async def orm_get_banner(session: AsyncSession, page: str):
     result = await session.execute(query)
     return result.scalar()
 
-async def orm_geet_info_pages(session: AsyncSession):
+async def orm_get_info_pages(session: AsyncSession):
     query = select(Banner)
     result = await session.execute(query)
     return result.scalars().all()

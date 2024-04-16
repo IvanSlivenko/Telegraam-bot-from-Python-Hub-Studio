@@ -40,8 +40,10 @@ async def on_startup(bot):
     # if run_params:
     #     await drop_db()
     # await create_db()
-
+#-------------------------------------------
+    #Виконуємо один раз
     await drop_db()
+#-------------------------------------------
     await create_db()
 
 async def on_shutdown(bot):
@@ -53,12 +55,15 @@ async def main():
 
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
+
     dp.update.middleware(DataBaseSession(session_pool=session_marker))
 
     await bot.delete_webhook(drop_pending_updates=True)
+    #--------------------------------------------------------------------
+    # Виконуємо один раз
     await bot.delete_my_commands(scope=types.BotCommandScopeAllPrivateChats()) # Видалення команд з меню
+    #--------------------------------------------------------------------
     # await bot.set_my_commands(commands=private, scope=types.BotCommandScopeAllPrivateChats())
-    # await dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 asyncio.run(main())
