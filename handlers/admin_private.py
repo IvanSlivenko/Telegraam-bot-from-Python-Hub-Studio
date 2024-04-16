@@ -116,6 +116,32 @@ async def add_banner(message: types.Message, state: FSMContext, session: AsyncSe
     await state.clear()
 
 #Ловимо не коректне введення
+@admin_router.message(AddBanner.image)
+async def add_banner_2(message: types.Message, state: FSMContext):
+    await message.answer("Відправте фото банера чи натисніть відміну")
+########################################################################################
+
+class AddProduct(StatesGroup):
+    #Кроки станів
+    name = State()
+    description = State()
+    category = State()
+    price = State()
+    image = State()
+
+    product_change = None
+
+    texts = {
+        "AddProduct:name": "Введіть назву заново",
+        "AddProduct:description": "Введіть опис заново",
+        "AddProduct:category": "Введіть категорію заново",
+        "AddProduct:price": "Введіть ціну заново",
+        "AddProduct:image": "Цей крок останній",
+
+    }
+
+
+
 
 # Код для машин стану (FSM) ////////////////////////////////////////////////////
 
@@ -175,36 +201,40 @@ async def cancel_handler(message: types.Message, state: FSMContext) -> None:
         previous = step
 
 
-
-@admin_router.message(AddProduct.name, or_f(F.text, F.text == '.') )
+#Ловимо данні для стану name та змінюємо стан на description
+@admin_router.message(AddProduct.name, F.text)
 async def add_name(message: types.Message, state: FSMContext):
-    if message.text == '.':
+    if message.text == '.' and AddProduct.product_for_change:
         await state.update_data(name=AddProduct.product_for_change.name)
     else:
-        if len(message.text) >= 100:
-            await message.answer(
-                'Назва товару не повина перевищувати 100 символів.\n Спробуйте знову'
-            )
+        if 4 >= len(message.text) >=150:
+            await message.answer("Назва товара має містити від 4 до 150 символів")
             return
-
         await state.update_data(name=message.text)
-    await message.answer("Вкажіть опис товару")
+    await message.answer("Додайте опис товару")
     await state.set_state(AddProduct.description)
+
 
 @admin_router.message(AddProduct.name)
 async def add_name_Error(message: types.Message, state: FSMContext):
     await message.answer("Ви вказали недопустимі данні, вкажіть назву товару у строковому форматі")
 
-
-@admin_router.message(AddProduct.description, or_f(F.text, F.text == '.'))
-async def add_description(message: types.Message, state: FSMContext):
-    if message.text == '.':
+#Ловимо данні для стану description та змінюємо стан на price
+@admin_router.message(AddProduct.description,F.text)
+async def add_description(message: types.Message, state: FSMContext, session: AsyncSession):
+    if message.text == '.' and AddProduct.product_for_change:
         await state.update_data(description=AddProduct.product_for_change.description)
     else:
+        if 4 >= len(message.text):
+            await message.answer(
+                "Занадто короткий опис.\n Напишіть знову"
+            )
+            return
         await state.update_data(description=message.text)
-    await message.answer("Вкажіть ціну товару")
-    await state.set_state(AddProduct.price)
-
+    categories = await orm_get_categories(session)
+    btns = {category.name: str(category.id) for category in categories}
+    await message.answer("Оберіть категорію", reply_markup=get_callback_btns(btns=btns))
+    await state.set_state(AddProduct.category)
 @admin_router.message(AddProduct.description)
 async def add_description_Error(message: types.Message, state: FSMContext):
     await message.answer("Ви вказали не допустимі данні, вкажіть опис товару у строковому форматі")
@@ -258,3 +288,29 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
 async def add_price_Error(message: types.Message, state: FSMContext):
     await message.answer("Додайте зображення товару")
 
+
+#//////////////////////////////////////////////////////////////////////////////
+# @admin_router.message(AddProduct.name, or_f(F.text, F.text == '.') )
+# async def add_name(message: types.Message, state: FSMContext):
+#     if message.text == '.':
+#         await state.update_data(name=AddProduct.product_for_change.name)
+#     else:
+#         if len(message.text) >= 100:
+#             await message.answer(
+#                 'Назва товару не повина перевищувати 100 символів.\n Спробуйте знову'
+#             )
+#             return
+#
+#         await state.update_data(name=message.text)
+#     await message.answer("Вкажіть опис товару")
+#     await state.set_state(AddProduct.description)
+#/////////////////////////////////////////////////////////////////////////////////////////
+
+# @admin_router.message(AddProduct.description, or_f(F.text, F.text == '.'))
+# async def add_description(message: types.Message, state: FSMContext):
+#     if message.text == '.':
+#         await state.update_data(description=AddProduct.product_for_change.description)
+#     else:
+#         await state.update_data(description=message.text)
+#     await message.answer("Вкажіть ціну товару")
+#     await state.set_state(AddProduct.price)
