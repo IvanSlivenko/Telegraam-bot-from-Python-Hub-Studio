@@ -42,7 +42,7 @@ async def on_startup(bot):
     # await create_db()
 #-------------------------------------------
     #Виконуємо один раз
-    await drop_db()
+    # await drop_db()
 #-------------------------------------------
     await create_db()
 
@@ -61,7 +61,7 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     #--------------------------------------------------------------------
     # Виконуємо один раз
-    await bot.delete_my_commands(scope=types.BotCommandScopeAllPrivateChats()) # Видалення команд з меню
+    # await bot.delete_my_commands(scope=types.BotCommandScopeAllPrivateChats()) # Видалення команд з меню
     #--------------------------------------------------------------------
     # await bot.set_my_commands(commands=private, scope=types.BotCommandScopeAllPrivateChats())
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())

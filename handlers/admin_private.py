@@ -30,6 +30,7 @@ admin_router.message.filter(ChatTypeFilter(["private"]), IsAdmin())
 ADMIN_KB = get_keyboard(
         "Додати товар",
         "Ассортимент",
+        "Додати/Змінити банер",
         placeholder="Оберіть дію",
         sizes=(2,),
     )
@@ -52,7 +53,7 @@ class AddProduct(StatesGroup):
 async def add_product(message: types.Message):
     await message.answer("Маєте бажання щось зробити", reply_markup=ADMIN_KB)
 
-@admin_router.message(F.text == 'Асортимент')
+@admin_router.message(F.text == 'Ассортимент')
 async def admin_features(message: types.Message, session: AsyncSession):
     categories = await orm_get_categories(session)
     btns = {category.name: f'category_{category.id}' for category in categories}
@@ -86,7 +87,7 @@ async def delete_product_callback(
     await callback.answer("Товар видалено", show_alert=True)
     await callback.message.answer("Товар видалено !")
 
-############ Мікро FSM для  завантаження / зміни банерів#################
+############ Мікро FSM для  завантаження / зміни банерів #################
 class AddBanner(StatesGroup):
     image = State()
 
@@ -129,7 +130,7 @@ class AddProduct(StatesGroup):
     price = State()
     image = State()
 
-    product_change = None
+    product_for_change = None
 
     texts = {
         "AddProduct:name": "Введіть назву заново",
@@ -147,7 +148,7 @@ class AddProduct(StatesGroup):
 
 # ------- Змінюємо товар
 # Заходимо в стан очікування вводу ім'я (при зміні)
-@admin_router.callback_query(StateFilter(None), F.data.startswith('change_'))
+@admin_router.callback_query(StateFilter(None), F.data.startswith("change_"))
 async def change_product_callback(
     callback: types.CallbackQuery, state: FSMContext, session: AsyncSession
 ):
@@ -157,9 +158,9 @@ async def change_product_callback(
 
     AddProduct.product_for_change = product_for_change
 
-    # await callback.answer()
+    await callback.answer()
     await callback.message.answer(
-        "Введіть назву товару", reply_markup=types.ReplyKeyboardRemove()
+        f"Введіть назву товару {AddProduct.product_for_change.name}", reply_markup=types.ReplyKeyboardRemove()
     )
     await state.set_state(AddProduct.name)
 
@@ -211,7 +212,7 @@ async def add_name(message: types.Message, state: FSMContext):
             await message.answer("Назва товара має містити від 4 до 150 символів")
             return
         await state.update_data(name=message.text)
-    await message.answer("Додайте опис товару")
+    await message.answer(f"Додайте опис товару {AddProduct.product_for_change.name}")
     await state.set_state(AddProduct.description)
 
 
@@ -240,9 +241,28 @@ async def add_description_Error(message: types.Message, state: FSMContext):
     await message.answer("Ви вказали не допустимі данні, вкажіть опис товару у строковому форматі")
 
 
-@admin_router.message(AddProduct.price, or_f(F.text, F.text == '.'))
+# Ловимо callback вибора категорії
+@admin_router.callback_query(AddProduct.category)
+async def category_choice(callback: types.CallbackQuery,state: FSMContext, session: AsyncSession):
+    if int(callback.data) in [category.id for category in await orm_get_categories(session)]:
+        await callback.answer()
+        await state.update_data(category=callback.data)
+        await callback.message.answer(f'Тепер вкажіть ціну товару {AddProduct.product_for_change.name}')
+        await state.set_state(AddProduct.price)
+    else:
+        await callback.message.answer('Виберіть категорію з кнопок')
+        await callback.answer()
+# Ловимо будь-які не коректні дії крім натискання на кнопку вибора категорії
+@admin_router.message(AddProduct.category)
+async def category_choice2(message: types.Message, state: FSMContext):
+    await message.answer("'Оберіть категорію з кнопок.'")
+
+
+
+#Ловимо данні для стану price і потім змінюємо на стан image
+@admin_router.message(AddProduct.price, F.text)
 async def add_price(message: types.Message, state: FSMContext):
-    if message.text == '.':
+    if message.text == '.' and AddProduct.product_for_change:
         await state.update_data(price=AddProduct.product_for_change.price)
     else:
         try:
@@ -253,21 +273,24 @@ async def add_price(message: types.Message, state: FSMContext):
 
 
         await state.update_data(price=message.text)
-    await message.answer("Додайте картинку товару")
+    await message.answer(f"Додайте картинку товару{AddProduct.product_for_change.name}")
     await state.set_state(AddProduct.image)
-
+#Хендлер для відлову не коретних данних для стану price
 @admin_router.message(AddProduct.price)
 async def add_price_Error(message: types.Message, state: FSMContext):
     await message.answer("Ви вказали не допустимі данні, вкажіть ціну товару у числовому форматі")
 
-
+#Ловимо данні для стану image і потім виходимо зі станів
 @admin_router.message(AddProduct.image, or_f(F.photo, F.text == '.'))
 async def add_image(message: types.Message, state: FSMContext, session: AsyncSession):
-
-    if message.text and message.text == '.':
+    if message.text and message.text == '.' and AddProduct.product_for_change:
         await state.update_data(image=AddProduct.product_for_change.image)
-    else:
+
+    elif message.photo:
         await state.update_data(image=message.photo[-1].file_id)
+    else:
+        await message.answer('Додайте фото')
+        return
     data = await state.get_data()
     try:
         if AddProduct.product_for_change:
@@ -284,6 +307,7 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
 
     AddProduct.product_for_change = None
 
+# Ловимо всю іншу некоректну поведінку для цього стану
 @admin_router.message(AddProduct.image)
 async def add_price_Error(message: types.Message, state: FSMContext):
     await message.answer("Додайте зображення товару")
