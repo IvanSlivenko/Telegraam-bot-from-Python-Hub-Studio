@@ -13,30 +13,40 @@ from database.orm_query import (
 
 from filters.chat_types import ChatTypeFilter
 from kbds.inline import get_callback_btns
+from handlers.menu_processing import get_menu_content
 
 user_private_router = Router()
 user_private_router.message.filter(ChatTypeFilter(['private']))
 
 
 @user_private_router.message(CommandStart())
-async def start_cmd(message: types.Message):
-    await message.answer(
-        f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ",
-             reply_markup=get_callback_btns(btns={
-                    'Тисни сюди': 'some_1'
-            }))
+async def start_cmd(message: types.Message, session: AsyncSession):
+    media, reply_markup = await get_menu_content(session, level=0, menu_name="main")
+
+    await message.answer_photo(media.media, caption=media.caption, reply_markup=reply_markup)
 
 
-@user_private_router.callback_query(F.data.startswith('some_'))
-async def counter(callback: types.CallbackQuery):
-    number = int(callback.data.split('_')[-1])
+    # #--------------------------------------------------
+    # await message.answer(
+    #     f"Доброго дня {message.from_user.full_name} - я віртуальний помічник ",
+    #          reply_markup=get_callback_btns(btns={
+    #                 'Тисни сюди': 'some_1'
+    #         }))
+    #-------------------------------------------------
 
-    await callback.message.edit_text(
-        text=f"Натиснутий - {number}",
-        reply_markup=get_callback_btns(btns={
-            'Тисни ще раз': f'some_{number + 1}'
-        }))
+#-------------------------------------------------------------------------------------
+# @user_private_router.callback_query(F.data.startswith('some_'))
+# async def counter(callback: types.CallbackQuery):
+#     number = int(callback.data.split('_')[-1])
+#
+#
+#     await callback.message.edit_text(
+#         text=f"Натиснутий - {number}",
+#         reply_markup=get_callback_btns(btns={
+#             'Тисни ще раз': f'some_{number + 1}'
+#         }))
 
+#--------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------
 # @user_private_router.message(or_f(Command("menu"), (F.text.lower() == "меню")))

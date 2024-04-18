@@ -212,7 +212,10 @@ async def add_name(message: types.Message, state: FSMContext):
             await message.answer("Назва товара має містити від 4 до 150 символів")
             return
         await state.update_data(name=message.text)
-    await message.answer(f"Додайте опис товару {AddProduct.product_for_change.name}")
+    if AddProduct.product_for_change:
+        await message.answer(f"Додайте опис товару {AddProduct.product_for_change.name} ")
+    else:
+        await message.answer("Додайте опис товару")
     await state.set_state(AddProduct.description)
 
 
@@ -247,7 +250,11 @@ async def category_choice(callback: types.CallbackQuery,state: FSMContext, sessi
     if int(callback.data) in [category.id for category in await orm_get_categories(session)]:
         await callback.answer()
         await state.update_data(category=callback.data)
-        await callback.message.answer(f'Тепер вкажіть ціну товару {AddProduct.product_for_change.name}')
+
+        if AddProduct.product_for_change:
+            await callback.message.answer(f'Тепер вкажіть ціну товару {AddProduct.product_for_change.name} ')
+        else:
+            await callback.message.answer('Тепер вкажіть ціну товару ')
         await state.set_state(AddProduct.price)
     else:
         await callback.message.answer('Виберіть категорію з кнопок')
@@ -273,7 +280,11 @@ async def add_price(message: types.Message, state: FSMContext):
 
 
         await state.update_data(price=message.text)
-    await message.answer(f"Додайте картинку товару{AddProduct.product_for_change.name}")
+    if AddProduct.product_for_change:
+        await message.answer(f"Додайте картинку товару {AddProduct.product_for_change.name} ")
+    else:
+
+        await message.answer(f"Додайте картинку товару")
     await state.set_state(AddProduct.image)
 #Хендлер для відлову не коретних данних для стану price
 @admin_router.message(AddProduct.price)
@@ -297,7 +308,11 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
             await orm_update_product(session, AddProduct.product_for_change.id, data)
         else:
             await orm_add_product(session, data)
-        await message.answer("Товар додано/змінено", reply_markup=ADMIN_KB)
+
+        if AddProduct.product_for_change:
+            await message.answer(f"Товар {AddProduct.product_for_change.name} змінено", reply_markup=ADMIN_KB)
+        else:
+            await message.answer("Товар додано/змінено", reply_markup=ADMIN_KB)
         await state.clear()
 
     except Exception as e:
