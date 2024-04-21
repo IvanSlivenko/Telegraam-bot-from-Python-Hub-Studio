@@ -59,11 +59,12 @@ async def get_menu_content(
         level: int,
         menu_name: str,
         category: int | None = None,
-        page : int | None = None,
+        page: int | None = None,
+        product_id: int | None = None,
 ):
     if level == 0:
         return await main_menu(session, level, menu_name)
     elif level == 1:
         return await catalog(session, level, menu_name)
     elif level == 2:
-        return await products()
+        return await products(session, level, category, page)
