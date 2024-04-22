@@ -1,8 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import orm_get_banner
 from aiogram.types import InputMediaPhoto
-from kbds.inline import get_user_main_btns, get_user_catalog_btns, get_products_btns
-from database.orm_query import orm_get_categories, orm_get_products
+from kbds.inline import get_user_main_btns, get_user_catalog_btns, get_products_btns, get_user_cart
+from database.orm_query import (
+    orm_get_categories,
+    orm_get_products,
+    orm_delete_from_cart,
+    orm_reduce_product_in_cart,
+    orm_add_to_cart,
+    orm_get_user_carts
+)
+
+
 from utils.paginator import Paginator
 
 
@@ -54,13 +63,41 @@ async def products(session, level, category, page):
     )
 
     return image, kbds
+
+async def carts(session, level, menu_name, page, user_id, product_id):
+    if menu_name == 'delete':
+        await orm_delete_from_cart(session, user_id, product_id)
+        if page > 1: page -= 1
+    elif menu_name == 'decrement':
+        is_cart = await orm_reduce_product_in_cart(session, user_id, product_id)
+        if page > 1 and not is_cart: page -= 1
+    elif menu_name == 'increment':
+        await orm_add_to_cart(session, user_id, product_id)
+
+    carts = await  orm_get_user_carts(session, user_id)
+
+    if not carts:
+        banner = await orm_get_banner(session, 'cart')
+        image = InputMediaPhoto(media=banner.image, caption=f"<strong>{banner.description} </strong>")
+
+        kbds= get_user_cart(
+            level=level,
+            page=None,
+
+        )
+
+
+
+
+
+
 async def get_menu_content(
         session: AsyncSession,
         level: int,
         menu_name: str,
         category: int | None = None,
         page: int | None = None,
-        product_id: int | None = None,
+        user_id: int | None = None,
 ):
     if level == 0:
         return await main_menu(session, level, menu_name)
@@ -68,3 +105,5 @@ async def get_menu_content(
         return await catalog(session, level, menu_name)
     elif level == 2:
         return await products(session, level, category, page)
+    # elif level == 3:
+    #     return await c
