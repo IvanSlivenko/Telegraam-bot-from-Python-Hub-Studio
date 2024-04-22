@@ -74,7 +74,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
     elif menu_name == 'increment':
         await orm_add_to_cart(session, user_id, product_id)
 
-    carts = await  orm_get_user_carts(session, user_id)
+    carts = await orm_get_user_carts(session, user_id)
 
     if not carts:
         banner = await orm_get_banner(session, 'cart')
@@ -83,13 +83,36 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         kbds= get_user_cart(
             level=level,
             page=None,
+            pagination_btns=None,
+            product_id=None,
+        )
+    else:
+        paginator = Paginator(carts, page=page)
+        cart = paginator.get_page()[0]
 
+        cart_price = round(cart.quantity*cart.product.price, 2)
+        total_price = round(sum(cart.quantity*cart.product.price for cart in carts), 2)
+        image = InputMediaPhoto(
+            media=cart.product.image,
+            caption=
+            f"---------------------------------------✔\n"
+            f"Товар {paginator.page} з {paginator.pages} у кошику.\n "
+            f"---------------------------------------✔\n"
+            f"<strong>{cart.product.name}</strong>\n{cart.product.price} грн. x {cart.quantity} = {cart_price}грн.\n"
+            f"---------------------------------------💰\n"
+            f"Загальна вартість товарів в корзині <strong>{total_price}</strong>",
         )
 
+        pagination_btns = pages(paginator)
 
+        kbds = get_user_cart(
+            level=level,
+            page=page,
+            pagination_btns=pagination_btns,
+            product_id=cart.product.id,
+        )
 
-
-
+    return image, kbds
 
 async def get_menu_content(
         session: AsyncSession,
@@ -97,6 +120,7 @@ async def get_menu_content(
         menu_name: str,
         category: int | None = None,
         page: int | None = None,
+        product_id: int | None = None,
         user_id: int | None = None,
 ):
     if level == 0:
@@ -105,5 +129,5 @@ async def get_menu_content(
         return await catalog(session, level, menu_name)
     elif level == 2:
         return await products(session, level, category, page)
-    # elif level == 3:
-    #     return await c
+    elif level == 3:
+        return await carts(session, level, menu_name, page, user_id, product_id)
